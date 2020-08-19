@@ -41,7 +41,7 @@ async def react_message(key, message, emoji):
 async def send_git_link(message):
     if message.content == '-git':
         embedVar = discord.Embed(title='Git Repository',
-                url='https://www.youtube.com/',
+                url='https://github.com/JavaCafe01/mikasa',
                 color=0x824946)
         await message.channel.send(embed=embedVar)
 
@@ -79,6 +79,6 @@ async def on_message(message):
                 "bad" in message.content.lower(): 
             await message.channel.send(file=discord.File(mikasa_stare_gif))
 
-    send_git_link(message)
+    await send_git_link(message)
 
 client.run(TOKEN)
