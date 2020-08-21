@@ -2,12 +2,13 @@
 
 # Imports
 import os
-import asyncio
-import youtube_dl
 import discord
 
 from discord.ext import commands
 from dotenv import load_dotenv
+from discord.utils import get
+
+from mikajam import Mikajam
 
 
 # Load token from env vars
@@ -41,113 +42,7 @@ swear_rank = {}
 
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or("-"),
-                   description='Relatively simple music bot example')
-
-
-# Suppress noise about console usage from errors
-youtube_dl.utils.bug_reports_message = lambda: ''
-
-
-ytdl_format_options = {
-    'format': 'bestaudio/best',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-    'restrictfilenames': True,
-    'noplaylist': True,
-    'nocheckcertificate': True,
-    'ignoreerrors': False,
-    'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
-}
-
-ffmpeg_options = {
-    'options': '-vn'
-}
-
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-
-        self.data = data
-
-        self.title = data.get('title')
-        self.url = data.get('url')
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-
-
-class Music(commands.Cog):
-    
-    def __init__(self, bot):
-        self.bot = bot
-
-
-    # Force join into a vc (-join general)
-    @commands.command()
-    async def join(self, ctx, *, channel: discord.VoiceChannel):
-        if ctx.voice_client is not None:
-            return await ctx.voice_client.move_to(channel)
-        await channel.connect()
-
-   # Plays from yt with dl
-    @commands.command()
-    async def play(self, ctx, *, url):
-        async with ctx.typing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop)
-            ctx.voice_client.play(player, after=lambda e: print('Player error -> %s' % e) if e else None)
-        await ctx.send('Now playing -> {}'.format(player.title))
-
-
-    # Streams from yt (does not work, has a time limit (yt fault))
-    @commands.command()
-    async def stream(self, ctx, *, url):
-        async with ctx.typing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            ctx.voice_client.play(player, after=lambda e: print('Player error -> %s' % e) if e else None)
-        await ctx.send('Now playing -> {}'.format(player.title))
-
-
-    # Volume
-    @commands.command()
-    async def volume(self, ctx, volume: int):
-        if ctx.voice_client is None:
-            return await ctx.send("I am not in a voice channel")
-        ctx.voice_client.source.volume = volume / 100
-        await ctx.send("Volume changed to {}%".format(volume))
-
-
-    # Disconnect from voice
-    @commands.command()
-    async def stop(self, ctx):
-        await ctx.voice_client.disconnect()
-
-
-    # Makes sure someone is on voice
-    @play.before_invoke
-    @stream.before_invoke
-    async def ensure_voice(self, ctx):
-        if ctx.voice_client is None:
-            if ctx.author.voice:
-                await ctx.author.voice.channel.connect()
-            else:
-                await ctx.send(ctx.author.mention + " You are not in a voice channel")
-                raise commands.CommandError("User not in voice channel.")
-        elif ctx.voice_client.is_playing():
-            ctx.voice_client.stop()
+                   description='Simple Bot')
 
 
 # Hello command
@@ -192,10 +87,6 @@ async def poll(ctx, *args):
 @bot.command(pass_context=True)
 async def ping(ctx, *args):
     a = ctx.message.content.replace('-ping', '').strip()
-    #a = a.replace("<","")
-    #a = a.replace(">","")
-    #a = a.replace("@","")
-    #embedVar = discord.Embed(title=a + ' Humanity needs you! Get on the server.', color=0x824946)
     await ctx.message.channel.send(a + ' Humanity needs you! Get on the server')
 
 
@@ -208,7 +99,6 @@ async def sjar(ctx, *args):
         rank = tup[1] + "\t" + str(tup[0])
         embedVar.add_field(name=rank, value="-------------------", inline=False)
     await ctx.message.channel.send(embed=embedVar)
-
 
 
 # --{{{ Stuff that listens to all messages
@@ -228,7 +118,7 @@ async def swear_listener(message):
             swear_rank[auth] = swear_rank.get(auth, 0) + 1
             print(swear_rank)
             await message.channel.purge(limit=1)
-            await message.channel.send('Please refrain from using bad language, {}'.format(auth))
+            await message.channel.send('> Please refrain from using bad language, {}'.format(auth))
 
 
 @bot.event
@@ -247,6 +137,14 @@ async def on_message(message):
     # Listen for no u's
     if 'no u' in message.content.lower():
         await message.add_reaction(bot.get_emoji(mikasa_ded_emoji))
+
+    
+    # Clear cache of youtubes
+    if 'clear cache' in message.content.lower():
+        os.system("rm -f youtube-*")
+        await message.channel.send("> Youtube cache cleared " + 
+                message.author.mention)
+
 
     # Listen for compliments
     if "mikasa" in message.content.lower():
@@ -268,5 +166,5 @@ async def on_message(message):
 async def on_ready():
     print('Bot logged in as {0.user}'.format(bot))
 
-bot.add_cog(Music(bot))
+bot.add_cog(Mikajam(bot))
 bot.run(TOKEN)
