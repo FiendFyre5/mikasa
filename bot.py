@@ -2,29 +2,23 @@
 
 # Imports
 import os
-
 import asyncio
-
 import youtube_dl
+import discord
 
 from discord.ext import commands
-
-import discord
 from dotenv import load_dotenv
 
 
-
-
-# Load token and guild name from env vars
+# Load token from env vars
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
 
-# client = discord.Client()
 
 # Paths for files
 mikasa_scarf_gif = "media/mikasa_scarf.gif"
 mikasa_stare_gif = "media/mikasa_stare.gif"
+
 
 """
 # no ID, do a lookup
@@ -32,10 +26,6 @@ emoji = discord.utils.get(guild.emojis, name='LUL')
 if emoji:
     await message.add_reaction(emoji)
 """
-
-
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("-"),
-                   description='Relatively simple music bot example')
 
 
 # Emojis
@@ -46,14 +36,12 @@ knife_emoji = "\U0001f5e1"
 yes_emoji = "\U00002705"
 maybe_emoji = "\U0001F937"
 no_emoji = "\U0000274E"
-
+# Sweak Jar
 swear_rank = {}
 
 
-
-
-
-
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("-"),
+                   description='Relatively simple music bot example')
 
 
 # Suppress noise about console usage from errors
@@ -102,12 +90,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 
-
-
-
-
-
 class Music(commands.Cog):
+    
     def __init__(self, bot):
         self.bot = bot
 
@@ -164,9 +148,6 @@ class Music(commands.Cog):
                 raise commands.CommandError("Author not connected to a voice channel.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
-
-
-
 
 
 # Hello command
