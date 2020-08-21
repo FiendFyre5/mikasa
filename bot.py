@@ -96,56 +96,56 @@ class Music(commands.Cog):
         self.bot = bot
 
 
+    # Force join into a vc (-join general)
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel):
-        #Joins a voice channel#
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
         await channel.connect()
 
-   
-    @commands.command()
-    async def yt(self, ctx, *, url):
-        #Plays from a url (almost anything youtube_dl supports)#
-        async with ctx.typing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop)
-            ctx.voice_client.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
-        await ctx.send('Now playing -> {}'.format(player.title))
-
-
+   # Plays from yt with dl
     @commands.command()
     async def play(self, ctx, *, url):
-        #Streams from a url (same as yt, but doesn't predownload)#
         async with ctx.typing():
-            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-            ctx.voice_client.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
+            player = await YTDLSource.from_url(url, loop=self.bot.loop)
+            ctx.voice_client.play(player, after=lambda e: print('Player error -> %s' % e) if e else None)
         await ctx.send('Now playing -> {}'.format(player.title))
 
 
+    # Streams from yt (does not work, has a time limit (yt fault))
+    @commands.command()
+    async def stream(self, ctx, *, url):
+        async with ctx.typing():
+            player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
+            ctx.voice_client.play(player, after=lambda e: print('Player error -> %s' % e) if e else None)
+        await ctx.send('Now playing -> {}'.format(player.title))
+
+
+    # Volume
     @commands.command()
     async def volume(self, ctx, volume: int):
-        #Changes the player's volume#
         if ctx.voice_client is None:
             return await ctx.send("I am not in a voice channel")
         ctx.voice_client.source.volume = volume / 100
         await ctx.send("Volume changed to {}%".format(volume))
 
 
+    # Disconnect from voice
     @commands.command()
     async def stop(self, ctx):
-        #Stops and disconnects the bot from voice#
         await ctx.voice_client.disconnect()
 
 
-    @yt.before_invoke
+    # Makes sure someone is on voice
     @play.before_invoke
+    @stream.before_invoke
     async def ensure_voice(self, ctx):
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
                 await ctx.send(ctx.author.mention + " You are not in a voice channel")
-                raise commands.CommandError("Author not connected to a voice channel.")
+                raise commands.CommandError("User not in voice channel.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
