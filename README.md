@@ -14,3 +14,10 @@ Make sure you have the latest `python` or `python3` package installed. `python2`
 
 
 To install all the modules, you will need pip. Then, downloading them is easy: `pip install -r requirements.txt`.
+
+### todo
+
+* nix support for easy env setup
+* fix stupid youtube crash
+* enable logging
+* fetches??
