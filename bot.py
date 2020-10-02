@@ -140,7 +140,7 @@ async def on_message(message):
     await react_message("historia", message, bot.get_emoji(anger_emoji))
     await react_message("levi", message, knife_emoji)
     await react_message("eren", message, bot.get_emoji(creepy_annie_emoji))
-    await react_message("gokul", message, bot.get_emoji(shoe))
+    await react_message("gokul", message, shoe)
     
     # Listen for swearing
     await swear_listener(message)
