@@ -37,6 +37,7 @@ knife_emoji = "\U0001f5e1"
 yes_emoji = "\U00002705"
 maybe_emoji = "\U0001F937"
 no_emoji = "\U0000274E"
+shoe = "\U0001f45e"
 # Sweak Jar
 swear_rank = {}
 
@@ -89,6 +90,15 @@ async def ping(ctx, *args):
     a = ctx.message.content.replace('-ping', '').strip()
     await ctx.message.channel.send(a + ' Humanity needs you! Get on the server')
 
+# Heads or Tails
+@bot.command(pass_context=True)
+async def destiny(ctx, *args):
+    dice = (random.randint(1,3))
+    if dice == 1:
+            await ctx.message.channel.send("Heads")
+    else:
+            await ctx.message.channel.send("Tails")
+
 
 # Swear jar command
 @bot.command(pass_context=True)
@@ -130,7 +140,8 @@ async def on_message(message):
     await react_message("historia", message, bot.get_emoji(anger_emoji))
     await react_message("levi", message, knife_emoji)
     await react_message("eren", message, bot.get_emoji(creepy_annie_emoji))
-
+    await react_message("gokul", message, bot.get_emoji(shoe))
+    
     # Listen for swearing
     await swear_listener(message)
 
